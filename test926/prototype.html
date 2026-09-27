@@ -1,0 +1,688 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>上商淘 · 原型设计展示 | 上海商学院校园二手交易平台</title>
+<style>
+  :root{
+    --bg:#070b18;
+    --bg-2:#0b1226;
+    --card:rgba(255,255,255,.045);
+    --card-2:rgba(255,255,255,.07);
+    --line:rgba(255,255,255,.09);
+    --txt:#e9eefb;
+    --muted:#93a1bd;
+    --blue:#3b82f6;
+    --blue-deep:#1e62e8;
+    --cyan:#22d3ee;
+    --purple:#8b5cf6;
+    --pink:#ec4899;
+    --amber:#f59e0b;
+    --green:#10b981;
+    --red:#ef4444;
+    --radius:20px;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{
+    font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;
+    background:var(--bg);
+    color:var(--txt);
+    line-height:1.6;
+    overflow-x:hidden;
+    -webkit-font-smoothing:antialiased;
+  }
+  ::selection{background:rgba(59,130,246,.35)}
+
+  /* ===== 背景装饰 ===== */
+  .bg-deco{position:fixed;inset:0;z-index:0;pointer-events:none}
+  .bg-deco::before{
+    content:"";position:absolute;inset:0;
+    background:
+      radial-gradient(900px 500px at 12% -5%,rgba(59,130,246,.22),transparent 60%),
+      radial-gradient(800px 500px at 95% 8%,rgba(139,92,246,.18),transparent 60%),
+      radial-gradient(700px 600px at 50% 110%,rgba(34,211,238,.10),transparent 60%);
+  }
+  .bg-grid{
+    position:absolute;inset:0;
+    background-image:
+      linear-gradient(rgba(255,255,255,.035) 1px,transparent 1px),
+      linear-gradient(90deg,rgba(255,255,255,.035) 1px,transparent 1px);
+    background-size:56px 56px;
+    mask-image:radial-gradient(ellipse 90% 70% at 50% 0%,#000 40%,transparent 100%);
+    -webkit-mask-image:radial-gradient(ellipse 90% 70% at 50% 0%,#000 40%,transparent 100%);
+  }
+
+  /* ===== 顶部进度条 / 导航 ===== */
+  .progress{position:fixed;top:0;left:0;height:3px;width:0;z-index:100;
+    background:linear-gradient(90deg,var(--blue),var(--cyan),var(--purple));
+    box-shadow:0 0 12px rgba(59,130,246,.7)}
+  .topnav{
+    position:fixed;top:14px;left:50%;transform:translateX(-50%);z-index:90;
+    display:flex;align-items:center;gap:6px;
+    padding:7px 10px;border-radius:999px;
+    background:rgba(10,16,32,.62);border:1px solid var(--line);
+    backdrop-filter:blur(18px) saturate(1.6);-webkit-backdrop-filter:blur(18px) saturate(1.6);
+    box-shadow:0 8px 32px rgba(0,0,0,.35);
+    max-width:calc(100vw - 24px);
+  }
+  .topnav .brand{display:flex;align-items:center;gap:8px;padding:0 10px 0 6px;font-weight:800;font-size:14px;letter-spacing:1px}
+  .topnav .brand .dot{width:22px;height:22px;border-radius:7px;
+    background:linear-gradient(135deg,var(--blue),var(--cyan));
+    display:flex;align-items:center;justify-content:center;font-size:12px}
+  .topnav a{
+    color:var(--muted);text-decoration:none;font-size:12.5px;font-weight:600;
+    padding:6px 12px;border-radius:999px;white-space:nowrap;transition:.25s;
+  }
+  .topnav a:hover{color:var(--txt);background:rgba(255,255,255,.06)}
+  .topnav a.active{color:#fff;background:linear-gradient(135deg,var(--blue-deep),var(--blue));box-shadow:0 4px 14px rgba(30,98,232,.4)}
+
+  /* ===== 版式 ===== */
+  .wrap{position:relative;z-index:1;max-width:1200px;margin:0 auto;padding:0 24px}
+  section{padding:96px 0 20px;scroll-margin-top:80px}
+  .kicker{
+    display:inline-flex;align-items:center;gap:8px;
+    font-size:12.5px;font-weight:700;letter-spacing:2.5px;color:var(--cyan);
+    padding:6px 14px;border:1px solid rgba(34,211,238,.3);border-radius:999px;
+    background:rgba(34,211,238,.07);margin-bottom:18px;
+  }
+  .sec-title{font-size:clamp(26px,3.6vw,40px);font-weight:800;letter-spacing:.5px;line-height:1.25}
+  .sec-title .grad{background:linear-gradient(120deg,var(--blue),var(--cyan)55%,var(--purple));
+    -webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+  .sec-sub{color:var(--muted);font-size:15px;margin-top:12px;max-width:640px}
+
+  /* ===== 封面 ===== */
+  .cover{min-height:100svh;display:flex;flex-direction:column;justify-content:center;padding-top:120px;padding-bottom:60px;position:relative}
+  .cover-badge{display:inline-flex;align-items:center;gap:8px;font-size:13px;color:var(--muted);
+    border:1px solid var(--line);padding:7px 16px;border-radius:999px;background:rgba(255,255,255,.03);width:fit-content;margin-bottom:28px}
+  .cover-badge b{color:var(--cyan);font-weight:700}
+  .cover h1{
+    font-size:clamp(64px,11vw,128px);font-weight:900;line-height:1;letter-spacing:10px;
+    background:linear-gradient(160deg,#ffffff 10%,#7db4ff 45%,#3b82f6 70%,#8b5cf6 100%);
+    -webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;
+    filter:drop-shadow(0 8px 40px rgba(59,130,246,.35));
+  }
+  .cover .en{font-size:14px;letter-spacing:10px;color:var(--muted);margin-top:14px;font-weight:600}
+  .cover .slogan{font-size:clamp(17px,2.2vw,22px);color:#c6d2ea;margin-top:26px;font-weight:500}
+  .cover .slogan em{font-style:normal;color:var(--cyan);font-weight:700}
+  .cover-cta{display:flex;gap:14px;margin-top:40px;flex-wrap:wrap}
+  .btn{
+    display:inline-flex;align-items:center;gap:9px;text-decoration:none;
+    padding:14px 30px;border-radius:14px;font-size:15px;font-weight:700;transition:.28s;cursor:pointer;border:1px solid transparent;
+  }
+  .btn-primary{background:linear-gradient(135deg,var(--blue-deep),var(--blue));color:#fff;
+    box-shadow:0 10px 30px rgba(30,98,232,.45)}
+  .btn-primary:hover{transform:translateY(-3px);box-shadow:0 16px 40px rgba(30,98,232,.55)}
+  .btn-ghost{background:rgba(255,255,255,.05);color:var(--txt);border-color:var(--line)}
+  .btn-ghost:hover{background:rgba(255,255,255,.1);transform:translateY(-3px)}
+  .cover-stats{display:flex;gap:40px;margin-top:64px;flex-wrap:wrap}
+  .cover-stats .num{font-size:34px;font-weight:800;
+    background:linear-gradient(135deg,#fff,#9cc2ff);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+  .cover-stats .lab{font-size:13px;color:var(--muted);margin-top:2px}
+  .scroll-hint{position:absolute;bottom:28px;left:50%;transform:translateX(-50%);color:var(--muted);font-size:12px;
+    display:flex;flex-direction:column;align-items:center;gap:8px;letter-spacing:2px}
+  .scroll-hint .mouse{width:22px;height:36px;border:2px solid var(--muted);border-radius:12px;position:relative}
+  .scroll-hint .mouse::after{content:"";position:absolute;top:6px;left:50%;transform:translateX(-50%);
+    width:3px;height:7px;border-radius:3px;background:var(--muted);animation:wheel 1.6s infinite}
+  @keyframes wheel{0%{opacity:1;top:6px}70%{opacity:0;top:16px}100%{opacity:0}}
+
+  /* ===== 通用卡片 ===== */
+  .card{
+    background:var(--card);border:1px solid var(--line);border-radius:var(--radius);
+    padding:28px;position:relative;overflow:hidden;
+    transition:transform .35s,border-color .35s,background .35s;
+  }
+  .card:hover{transform:translateY(-5px);border-color:rgba(255,255,255,.18);background:var(--card-2)}
+  .grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;margin-top:40px}
+  .grid-2{display:grid;grid-template-columns:repeat(2,1fr);gap:20px;margin-top:40px}
+  .ic{width:46px;height:46px;border-radius:13px;display:flex;align-items:center;justify-content:center;font-size:22px;margin-bottom:16px}
+  .card h3{font-size:17px;font-weight:700;margin-bottom:8px}
+  .card p{font-size:13.5px;color:var(--muted);line-height:1.7}
+
+  /* ===== 角色 ===== */
+  .roles{display:grid;grid-template-columns:1fr 1fr;gap:22px;margin-top:42px}
+  .role{border-radius:24px;padding:36px;position:relative;overflow:hidden;border:1px solid var(--line)}
+  .role.user{background:linear-gradient(150deg,rgba(30,98,232,.22),rgba(34,211,238,.08))}
+  .role.admin{background:linear-gradient(150deg,rgba(124,58,237,.25),rgba(236,72,153,.08))}
+  .role .tag{font-size:12px;font-weight:700;letter-spacing:2px;padding:5px 12px;border-radius:999px;display:inline-block;margin-bottom:18px}
+  .role.user .tag{background:rgba(59,130,246,.25);color:#9cc2ff}
+  .role.admin .tag{background:rgba(139,92,246,.28);color:#cbb5ff}
+  .role h3{font-size:24px;font-weight:800;margin-bottom:10px}
+  .role p{font-size:14px;color:#c2cde5;margin-bottom:20px}
+  .role ul{list-style:none;display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .role li{font-size:13.5px;color:#d5def0;display:flex;align-items:center;gap:9px}
+  .role li::before{content:"";width:6px;height:6px;border-radius:50%;flex:none}
+  .role.user li::before{background:var(--cyan);box-shadow:0 0 8px var(--cyan)}
+  .role.admin li::before{background:var(--pink);box-shadow:0 0 8px var(--pink)}
+  .role .glow{position:absolute;width:240px;height:240px;border-radius:50%;filter:blur(70px);right:-70px;bottom:-90px}
+  .role.user .glow{background:rgba(59,130,246,.5)}
+  .role.admin .glow{background:rgba(139,92,246,.55)}
+
+  /* ===== 任务流程 ===== */
+  .flow{display:grid;grid-template-columns:repeat(6,1fr);gap:14px;margin-top:46px;counter-reset:step}
+  .flow-step{
+    background:var(--card);border:1px solid var(--line);border-radius:18px;padding:24px 18px;
+    text-align:center;position:relative;transition:.3s;
+  }
+  .flow-step:hover{transform:translateY(-6px);border-color:rgba(59,130,246,.5);box-shadow:0 14px 34px rgba(30,98,232,.2)}
+  .flow-step .n{
+    width:42px;height:42px;border-radius:50%;margin:0 auto 14px;
+    display:flex;align-items:center;justify-content:center;font-weight:800;font-size:17px;
+    background:linear-gradient(135deg,var(--blue-deep),var(--cyan));color:#fff;
+    box-shadow:0 6px 18px rgba(30,98,232,.45);
+  }
+  .flow-step:nth-child(4) .n,.flow-step:nth-child(5) .n,.flow-step:nth-child(6) .n{
+    background:linear-gradient(135deg,#7c3aed,var(--pink));box-shadow:0 6px 18px rgba(124,58,237,.45)}
+  .flow-step h4{font-size:14.5px;font-weight:700;margin-bottom:6px}
+  .flow-step p{font-size:12px;color:var(--muted);line-height:1.6}
+  .flow-line{margin-top:26px;text-align:center;font-size:13.5px;color:var(--muted)}
+  .flow-line b{color:var(--cyan)}
+
+  /* ===== 原型截图墙 ===== */
+  .screen-group{margin-top:54px}
+  .group-head{display:flex;align-items:center;gap:14px;margin-bottom:24px}
+  .group-head .gn{
+    width:34px;height:34px;border-radius:10px;flex:none;
+    display:flex;align-items:center;justify-content:center;font-weight:800;font-size:15px;
+    background:linear-gradient(135deg,var(--blue),var(--purple));
+  }
+  .group-head h3{font-size:19px;font-weight:700}
+  .group-head span{font-size:13px;color:var(--muted)}
+  .group-head .ln{flex:1;height:1px;background:linear-gradient(90deg,var(--line),transparent)}
+  .screens{display:grid;grid-template-columns:repeat(5,1fr);gap:22px}
+  .screens.cols-1{grid-template-columns:repeat(4,1fr)}
+  .screens.cols-1 .shot{max-width:300px}
+  .shot{cursor:pointer;display:block;width:100%;text-align:left;padding:0;border:none;background:none;color:inherit}
+  .shot .pic{
+    border-radius:26px;overflow:hidden;position:relative;
+    border:1px solid rgba(255,255,255,.1);
+    box-shadow:0 18px 44px rgba(0,0,0,.45);
+    transition:transform .4s cubic-bezier(.2,.8,.2,1),box-shadow .4s;
+    background:#0d1428;
+  }
+  .shot .pic::after{content:"";position:absolute;inset:0;border-radius:inherit;
+    background:linear-gradient(180deg,rgba(255,255,255,.08),transparent 30%);pointer-events:none}
+  .shot img{width:100%;display:block;transition:transform .5s}
+  .shot:hover .pic{transform:translateY(-8px) scale(1.015);box-shadow:0 28px 60px rgba(30,98,232,.3)}
+  .shot:hover img{transform:scale(1.03)}
+  .shot .meta{padding:14px 6px 2px}
+  .shot .meta h4{font-size:14.5px;font-weight:700;display:flex;align-items:center;gap:8px}
+  .shot .meta h4 .pill{font-size:10.5px;font-weight:700;padding:2px 8px;border-radius:999px}
+  .pill.b{background:rgba(59,130,246,.2);color:#9cc2ff}
+  .pill.p{background:rgba(139,92,246,.22);color:#cbb5ff}
+  .shot .meta p{font-size:12px;color:var(--muted);margin-top:3px}
+  .zoom-tag{position:absolute;right:10px;bottom:10px;z-index:2;
+    width:32px;height:32px;border-radius:50%;background:rgba(8,12,26,.7);border:1px solid var(--line);
+    display:flex;align-items:center;justify-content:center;font-size:14px;
+    opacity:0;transform:translateY(6px);transition:.3s}
+  .shot:hover .zoom-tag{opacity:1;transform:translateY(0)}
+
+  /* ===== 设计规范 ===== */
+  .palette{display:grid;grid-template-columns:repeat(6,1fr);gap:14px;margin-top:40px}
+  .sw{border-radius:16px;overflow:hidden;border:1px solid var(--line);background:var(--card)}
+  .sw .c{height:88px}
+  .sw .info{padding:12px 14px}
+  .sw .info b{font-size:12.5px;display:block}
+  .sw .info span{font-size:11px;color:var(--muted)}
+  .spec-row{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-top:20px}
+  .spec-block{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:26px}
+  .spec-block h4{font-size:15px;font-weight:700;margin-bottom:14px;display:flex;align-items:center;gap:9px}
+  .type-demo .t1{font-size:30px;font-weight:800;letter-spacing:2px}
+  .type-demo .t2{font-size:17px;font-weight:600;margin-top:8px;color:#cdd8ee}
+  .type-demo .t3{font-size:13px;margin-top:8px;color:var(--muted)}
+  .type-demo .cap{font-size:11px;color:#5f6d8a;margin-top:6px}
+  .chips{display:flex;flex-wrap:wrap;gap:9px}
+  .chips span{font-size:12.5px;padding:7px 13px;border-radius:999px;background:rgba(255,255,255,.06);
+    border:1px solid var(--line);color:#cdd8ee}
+
+  /* ===== 技术架构 ===== */
+  .arch{margin-top:44px}
+  .arch-layer{
+    display:flex;align-items:center;gap:24px;background:var(--card);border:1px solid var(--line);
+    border-radius:18px;padding:24px 28px;margin-bottom:14px;position:relative;transition:.3s;
+  }
+  .arch-layer:hover{border-color:rgba(59,130,246,.45);background:var(--card-2)}
+  .arch-layer .li{width:52px;height:52px;border-radius:14px;flex:none;display:flex;align-items:center;justify-content:center;font-size:24px}
+  .arch-layer h4{font-size:16px;font-weight:700}
+  .arch-layer p{font-size:13px;color:var(--muted);margin-top:2px}
+  .arch-layer .tags{margin-left:auto;display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}
+  .arch-layer .tags span{font-size:11.5px;padding:5px 11px;border-radius:8px;background:rgba(255,255,255,.06);border:1px solid var(--line);color:#bcc8e0}
+
+  /* ===== 演示动线 ===== */
+  .timeline{margin-top:46px;display:grid;grid-template-columns:repeat(4,1fr);gap:0;position:relative}
+  .timeline::before{content:"";position:absolute;top:25px;left:6%;right:6%;height:2px;
+    background:linear-gradient(90deg,var(--blue),var(--cyan),var(--purple),var(--pink))}
+  .tl{text-align:center;padding:0 14px;position:relative}
+  .tl .pt{width:52px;height:52px;border-radius:50%;margin:0 auto 18px;position:relative;z-index:2;
+    display:flex;align-items:center;justify-content:center;font-size:22px;
+    background:var(--bg-2);border:2px solid var(--blue);box-shadow:0 0 22px rgba(59,130,246,.5)}
+  .tl:nth-child(2) .pt{border-color:var(--cyan);box-shadow:0 0 22px rgba(34,211,238,.5)}
+  .tl:nth-child(3) .pt{border-color:var(--purple);box-shadow:0 0 22px rgba(139,92,246,.5)}
+  .tl:nth-child(4) .pt{border-color:var(--pink);box-shadow:0 0 22px rgba(236,72,153,.5)}
+  .tl .dur{font-size:15px;font-weight:800;color:#fff}
+  .tl h4{font-size:15px;font-weight:700;margin:6px 0 8px}
+  .tl p{font-size:12px;color:var(--muted);line-height:1.7;text-align:left;
+    background:var(--card);border:1px solid var(--line);border-radius:14px;padding:13px 15px}
+
+  /* ===== 页脚 ===== */
+  .footer{margin-top:90px;padding:54px 0 60px;border-top:1px solid var(--line);text-align:center}
+  .footer h3{font-size:26px;font-weight:800;letter-spacing:4px;
+    background:linear-gradient(120deg,var(--blue),var(--cyan));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+  .footer p{color:var(--muted);font-size:13px;margin-top:10px}
+  .footer .btn{margin-top:26px}
+
+  /* ===== 灯箱 ===== */
+  .lightbox{position:fixed;inset:0;z-index:200;display:none;align-items:center;justify-content:center;
+    background:rgba(4,7,16,.86);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);padding:30px}
+  .lightbox.show{display:flex;animation:fade .25s}
+  @keyframes fade{from{opacity:0}to{opacity:1}}
+  .lightbox img{max-width:min(460px,92vw);max-height:92vh;border-radius:28px;
+    box-shadow:0 30px 90px rgba(0,0,0,.7);animation:pop .3s cubic-bezier(.2,.9,.3,1.2)}
+  @keyframes pop{from{transform:scale(.92);opacity:0}to{transform:scale(1);opacity:1}}
+  .lightbox .cap-t{position:fixed;bottom:26px;left:50%;transform:translateX(-50%);
+    color:#cdd8ee;font-size:14px;background:rgba(255,255,255,.08);padding:8px 20px;border-radius:999px;border:1px solid var(--line)}
+  .lb-close{position:fixed;top:22px;right:26px;width:44px;height:44px;border-radius:50%;
+    background:rgba(255,255,255,.08);border:1px solid var(--line);color:#fff;font-size:18px;cursor:pointer;transition:.25s}
+  .lb-close:hover{background:rgba(255,255,255,.18);transform:rotate(90deg)}
+  .lb-nav{position:fixed;top:50%;transform:translateY(-50%);width:48px;height:48px;border-radius:50%;
+    background:rgba(255,255,255,.08);border:1px solid var(--line);color:#fff;font-size:18px;cursor:pointer;transition:.25s}
+  .lb-nav:hover{background:rgba(255,255,255,.18)}
+  .lb-prev{left:24px}.lb-next{right:24px}
+
+  /* ===== 滚动显现 ===== */
+  .reveal{opacity:0;transform:translateY(34px);transition:opacity .75s ease,transform .75s cubic-bezier(.2,.8,.2,1)}
+  .reveal.in{opacity:1;transform:none}
+  .d1{transition-delay:.08s}.d2{transition-delay:.16s}.d3{transition-delay:.24s}.d4{transition-delay:.32s}.d5{transition-delay:.4s}
+
+  /* ===== 答辩注意事项 ===== */
+  .note-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-top:36px}
+  .note{background:rgba(245,158,11,.06);border:1px solid rgba(245,158,11,.22);border-radius:16px;padding:18px}
+  .note .ni{font-size:20px;margin-bottom:8px}
+  .note b{font-size:13.5px;display:block;margin-bottom:4px}
+  .note p{font-size:12px;color:var(--muted);line-height:1.6}
+  @media(max-width:1000px){.note-grid{grid-template-columns:repeat(2,1fr)}}
+  @media(max-width:640px){.note-grid{grid-template-columns:1fr}}
+
+  /* ===== 响应式 ===== */
+  @media(max-width:1000px){
+    .screens{grid-template-columns:repeat(3,1fr)}
+    .flow{grid-template-columns:repeat(3,1fr)}
+    .palette{grid-template-columns:repeat(3,1fr)}
+    .grid-3{grid-template-columns:1fr}
+    .topnav a{display:none}
+    .topnav .brand{padding-right:6px}
+  }
+  @media(max-width:640px){
+    section{padding:72px 0 10px}
+    .roles,.spec-row,.grid-2{grid-template-columns:1fr}
+    .screens{grid-template-columns:repeat(2,1fr)}
+    .screens.cols-1{grid-template-columns:repeat(2,1fr)}
+    .flow{grid-template-columns:1fr 1fr}
+    .palette{grid-template-columns:repeat(2,1fr)}
+    .timeline{grid-template-columns:1fr;gap:26px}
+    .timeline::before{display:none}
+    .cover h1{letter-spacing:6px}
+    .cover-stats{gap:24px}
+    .arch-layer{flex-wrap:wrap}
+    .arch-layer .tags{margin-left:0}
+    .role ul{grid-template-columns:1fr}
+    .lb-nav{display:none}
+  }
+</style>
+</head>
+<body>
+
+<div class="progress" id="progress"></div>
+<div class="bg-deco"><div class="bg-grid"></div></div>
+
+<nav class="topnav">
+  <span class="brand"><span class="dot">淘</span>上商淘</span>
+  <a href="#cover" data-nav="cover">封面</a>
+  <a href="#problem" data-nav="problem">背景</a>
+  <a href="#roles" data-nav="roles">角色</a>
+  <a href="#flow" data-nav="flow">任务流程</a>
+  <a href="#screens" data-nav="screens">原型界面</a>
+  <a href="#design" data-nav="design">设计规范</a>
+  <a href="#tech" data-nav="tech">技术架构</a>
+  <a href="#demo" data-nav="demo">演示动线</a>
+</nav>
+
+<!-- ============ 封面 ============ -->
+<section class="cover wrap" id="cover">
+  <div class="cover-badge">🎓 黑客松参赛作品 · <b>可交互移动端原型</b> · H5</div>
+  <h1>上商淘</h1>
+  <div class="en">S H A N G T A O</div>
+  <div class="slogan">上海商学院专属二手交易平台 —— 让每一件闲置，<em>在校园里继续发光</em></div>
+  <div class="cover-cta">
+    <a class="btn btn-primary" href="index.html">▶&nbsp; 进入可交互原型</a>
+    <a class="btn btn-ghost" href="#screens">查看原型设计 ↓</a>
+  </div>
+  <div class="cover-stats">
+    <div><div class="num">8</div><div class="lab">核心界面</div></div>
+    <div><div class="num">2</div><div class="lab">用户角色</div></div>
+    <div><div class="num">6</div><div class="lab">步完整闭环</div></div>
+    <div><div class="num">22</div><div class="lab">页面/弹层</div></div>
+  </div>
+  <div class="scroll-hint">
+    <span class="mouse"></span>
+    SCROLL
+  </div>
+</section>
+
+<!-- ============ 背景与痛点 ============ -->
+<section class="wrap" id="problem">
+  <div class="kicker reveal">01 · 背景洞察</div>
+  <div class="sec-title reveal">毕业季每年都在发生，<span class="grad">闲置的价值却在流失</span></div>
+  <p class="sec-sub reveal">我们走访了奉贤、徐汇两个校区的同学，发现校园二手流转长期依赖微信群和表白墙，存在三个普遍痛点：</p>
+  <div class="grid-3">
+    <div class="card reveal d1">
+      <div class="ic" style="background:rgba(239,68,68,.16)">📦</div>
+      <h3>闲置浪费严重</h3>
+      <p>教材、台灯、收纳架用过一学期就被丢弃或压在角落；毕业生带不走，新生又在花钱买新的，一边浪费一边重复消费。</p>
+    </div>
+    <div class="card reveal d2">
+      <div class="ic" style="background:rgba(245,158,11,.16)">💬</div>
+      <h3>信息刷屏难沉淀</h3>
+      <p>微信群里“出二手”的消息几分钟就被刷走，没有分类、搜索和图片展示，买家找不到货，卖家卖不出价。</p>
+    </div>
+    <div class="card reveal d3">
+      <div class="ic" style="background:rgba(139,92,246,.16)">🛡️</div>
+      <h3>跨平台交易缺信任</h3>
+      <p>在综合二手平台上面向社会人员交易，学生身份难验证；校内交易缺少审核与信用背书，纠纷无人处理。</p>
+    </div>
+  </div>
+  <div class="card reveal" style="margin-top:20px;text-align:center">
+    <h3 style="font-size:19px">💡 我们的机会</h3>
+    <p style="font-size:14.5px;max-width:720px;margin:6px auto 0;color:#c6d2ea">
+      做一个<b style="color:#fff">仅限上商学生、有审核治理、即拍即发即聊</b>的校园二手平台 —— 同校信任 + 内容化逛感 + 完整交易闭环，这就是「上商淘」。
+    </p>
+  </div>
+</section>
+
+<!-- ============ 角色 ============ -->
+<section class="wrap" id="roles">
+  <div class="kicker reveal">02 · 用户角色</div>
+  <div class="sec-title reveal">一个平台，<span class="grad">两种身份</span>，主题色一眼可辨</div>
+  <div class="roles">
+    <div class="role user reveal d1">
+      <span class="tag">ROLE · 蓝色主题</span>
+      <h3>普通用户（学生）</h3>
+      <p>买家与卖家一体，围绕“逛、发、聊、买”完成校园闲置流转。</p>
+      <ul>
+        <li>手机号注册登录</li>
+        <li>拍照发布闲置</li>
+        <li>分类搜索浏览</li>
+        <li>收藏与浏览记录</li>
+        <li>在线即时沟通</li>
+        <li>下单收货评价</li>
+      </ul>
+      <div class="glow"></div>
+    </div>
+    <div class="role admin reveal d2">
+      <span class="tag">ROLE · 紫色主题</span>
+      <h3>审核员（平台治理）</h3>
+      <p>负责商品合规审核与平台秩序，是“同校信任”的守门人。</p>
+      <ul>
+        <li>工作台数据概览</li>
+        <li>待审核商品处理</li>
+        <li>一键通过 / 驳回</li>
+        <li>审核动态留痕</li>
+        <li>系统通知接收</li>
+        <li>账号与身份切换</li>
+      </ul>
+      <div class="glow"></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 任务流程 ============ -->
+<section class="wrap" id="flow">
+  <div class="kicker reveal">03 · 完整用户任务流程</div>
+  <div class="sec-title reveal">一条主线，<span class="grad">六个步骤跑通完整交易闭环</span></div>
+  <p class="sec-sub reveal">这也是现场演示的核心动线：现场注册新账号 → 发布一件闲置 → 切换审核员通过 → 切回用户下单 → 沟通收货 → 评价。</p>
+  <div class="flow">
+    <div class="flow-step reveal d1"><div class="n">1</div><h4>注册登录</h4><p>自定义昵称，验证码登录，注册即自动进入</p></div>
+    <div class="flow-step reveal d1"><div class="n">2</div><h4>发布闲置</h4><p>最多9张图，选分类、定价、交易方式</p></div>
+    <div class="flow-step reveal d2"><div class="n">3</div><h4>审核上架</h4><p>审核员通过后进入“校园好物”公开展示</p></div>
+    <div class="flow-step reveal d3"><div class="n">4</div><h4>浏览下单</h4><p>分类/排序找货，查看详情后立即购买</p></div>
+    <div class="flow-step reveal d4"><div class="n">5</div><h4>沟通收货</h4><p>站内即时聊天，约定校区地点完成交接</p></div>
+    <div class="flow-step reveal d5"><div class="n">6</div><h4>评价闭环</h4><p>确认收货、评价商品，沉淀信用</p></div>
+  </div>
+  <div class="flow-line reveal">🔁 订单状态机：<b>下单 → 自动发货（2.5s 模拟）→ 确认收货 → 评价</b>，全部状态在“我的订单”实时可见</div>
+</section>
+
+<!-- ============ 原型界面 ============ -->
+<section class="wrap" id="screens">
+  <div class="kicker reveal">04 · 原型设计</div>
+  <div class="sec-title reveal">高保真可交互原型 · <span class="grad">8 个核心界面实拍</span></div>
+  <p class="sec-sub reveal">所有界面均为真实运行截图，点击任意界面可放大查看细节；原型本身可在下方入口直接操作。</p>
+
+  <!-- 组1：入口 -->
+  <div class="screen-group">
+    <div class="group-head reveal"><div class="gn">1</div><h3>入口与身份</h3><span></span><div class="ln"></div></div>
+    <div class="screens cols-1">
+      <button class="shot reveal d1" data-full="prototype-assets/01-login.png" data-cap="登录 / 注册 · 双角色选择">
+        <div class="pic"><img src="prototype-assets/01-login.png" alt="登录注册页"><span class="zoom-tag">⤢</span></div>
+        <div class="meta"><h4>登录 / 注册 <span class="pill b">用户+审核员</span></h4><p>双角色切换 · 验证码登录 · 新用户注册 · 第三方入口</p></div>
+      </button>
+    </div>
+  </div>
+
+  <!-- 组2：用户主界面 -->
+  <div class="screen-group">
+    <div class="group-head reveal"><div class="gn">2</div><h3>普通用户 · 五大主界面</h3><span>底部五宫格导航，当前页蓝色高亮</span><div class="ln"></div></div>
+    <div class="screens">
+      <button class="shot reveal d1" data-full="prototype-assets/02-home.png" data-cap="首页 · 校园好物商品流">
+        <div class="pic"><img src="prototype-assets/02-home.png" alt="首页"><span class="zoom-tag">⤢</span></div>
+        <div class="meta"><h4>首页 <span class="pill b">Tab 1</span></h4><p>搜索 · 活动 Banner · 分类金刚区 · 商品流</p></div>
+      </button>
+      <button class="shot reveal d2" data-full="prototype-assets/03-discover.png" data-cap="发现 · 校园内容社区">
+        <div class="pic"><img src="prototype-assets/03-discover.png" alt="发现页"><span class="zoom-tag">⤢</span></div>
+        <div class="meta"><h4>发现 <span class="pill b">Tab 2</span></h4><p>毕业季话题 · 图文帖子流 · 点赞评论分享</p></div>
+      </button>
+      <button class="shot reveal d3" data-full="prototype-assets/04-publish.png" data-cap="发布闲置 · 拍照即发">
+        <div class="pic"><img src="prototype-assets/04-publish.png" alt="发布闲置页"><span class="zoom-tag">⤢</span></div>
+        <div class="meta"><h4>发布闲置 <span class="pill b">中心按钮</span></h4><p>9 图上传 · 分类标签 · 定价 · 交易选项</p></div>
+      </button>
+      <button class="shot reveal d4" data-full="prototype-assets/05-messages.png" data-cap="消息 · 买卖双方即时沟通">
+        <div class="pic"><img src="prototype-assets/05-messages.png" alt="消息页"><span class="zoom-tag">⤢</span></div>
+        <div class="meta"><h4>消息 <span class="pill b">Tab 4</span></h4><p>会话列表 · 未读角标 · 交易中标识 · 系统通知</p></div>
+      </button>
+      <button class="shot reveal d5" data-full="prototype-assets/06-profile.png" data-cap="我的 · 个人中心">
+        <div class="pic"><img src="prototype-assets/06-profile.png" alt="我的页面"><span class="zoom-tag">⤢</span></div>
+        <div class="meta"><h4>我的 <span class="pill b">Tab 5</span></h4><p>个人卡片 · 发布/收藏/订单统计 · 服务菜单</p></div>
+      </button>
+    </div>
+  </div>
+
+  <!-- 组3：平台治理 -->
+  <div class="screen-group">
+    <div class="group-head reveal"><div class="gn">3</div><h3>平台治理 · 审核工作台</h3><span>紫色主题，与用户端明确区分</span><div class="ln"></div></div>
+    <div class="screens cols-1">
+      <button class="shot reveal d1" data-full="prototype-assets/07-admin.png" data-cap="审核工作台 · 数据概览与审核动态">
+        <div class="pic"><img src="prototype-assets/07-admin.png" alt="审核工作台"><span class="zoom-tag">⤢</span></div>
+        <div class="meta"><h4>审核工作台 <span class="pill p">审核员专属</span></h4><p>数据统计 · 快捷入口 · 待审核卡片 · 审核动态时间线</p></div>
+      </button>
+    </div>
+  </div>
+
+  <!-- 组4：交易支撑 -->
+  <div class="screen-group">
+    <div class="group-head reveal"><div class="gn">4</div><h3>交易支撑 · 地址与履约</h3><span>多地址管理，校区快递点代收</span><div class="ln"></div></div>
+    <div class="screens cols-1">
+      <button class="shot reveal d1" data-full="prototype-assets/08-address.png" data-cap="收货地址 · 多校区地址管理">
+        <div class="pic"><img src="prototype-assets/08-address.png" alt="收货地址页"><span class="zoom-tag">⤢</span></div>
+        <div class="meta"><h4>收货地址 <span class="pill b">子页面</span></h4><p>默认地址 · 新增/编辑/删除 · 奉贤 & 徐汇校区</p></div>
+      </button>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 设计规范 ============ -->
+<section class="wrap" id="design">
+  <div class="kicker reveal">05 · 设计语言</div>
+  <div class="sec-title reveal">统一的<span class="grad">色彩、字体与组件体系</span></div>
+
+  <div class="palette reveal">
+    <div class="sw"><div class="c" style="background:#1e62e8"></div><div class="info"><b>品牌主蓝</b><span>#1E62E8</span></div></div>
+    <div class="sw"><div class="c" style="background:#3b82f6"></div><div class="info"><b>用户蓝</b><span>#3B82F6</span></div></div>
+    <div class="sw"><div class="c" style="background:#22d3ee"></div><div class="info"><b>活力青</b><span>#22D3EE</span></div></div>
+    <div class="sw"><div class="c" style="background:#7c3aed"></div><div class="info"><b>审核紫</b><span>#7C3AED</span></div></div>
+    <div class="sw"><div class="c" style="background:linear-gradient(135deg,#7c3aed,#ec4899)"></div><div class="info"><b>审核渐变</b><span>Purple → Pink</span></div></div>
+    <div class="sw"><div class="c" style="background:#10b981"></div><div class="info"><b>成功绿</b><span>#10B981</span></div></div>
+  </div>
+
+  <div class="spec-row">
+    <div class="spec-block reveal d1">
+      <h4>🔤 字体层级</h4>
+      <div class="type-demo">
+        <div class="t1">上商淘</div><div class="cap">大标题 · 800/900 字重，渐变字</div>
+        <div class="t2">校园好物 · 8 件</div><div class="cap">板块标题 · 600–700 字重</div>
+        <div class="t3">低价淘好书，省钱又环保</div><div class="cap">正文/辅助 · 12–14px，弱化灰蓝</div>
+      </div>
+      <p style="font-size:12px;color:var(--muted);margin-top:14px">字体栈：PingFang SC / 系统默认无衬线，零外部依赖，离线演示秒开。</p>
+    </div>
+    <div class="spec-block reveal d2">
+      <h4>🧩 核心组件</h4>
+      <div class="chips">
+        <span>毛玻璃顶栏</span><span>圆角卡片</span><span>底部五宫格</span>
+        <span>未读红点角标</span><span>骨架屏</span><span>胶囊 Toast</span>
+        <span>底部动作面板</span><span>状态筛选标签</span><span>图片九宫格</span>
+        <span>按压反馈动效</span><span>交错入场动画</span><span>数字滚动</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 技术架构 ============ -->
+<section class="wrap" id="tech">
+  <div class="kicker reveal">06 · 技术架构</div>
+  <div class="sec-title reveal">轻量四层架构，<span class="grad">单端口即可完整运行</span></div>
+
+  <div class="arch">
+    <div class="arch-layer reveal d1">
+      <div class="li" style="background:rgba(59,130,246,.18)">📱</div>
+      <div><h4>前端 · H5 单文件应用</h4><p>移动端优先，100dvh 动态视口 + 安全区适配；页面历史栈支持原生返回手势</p></div>
+      <div class="tags"><span>HTML/CSS/JS</span><span>单文件部署</span><span>响应式</span></div>
+    </div>
+    <div class="arch-layer reveal d2">
+      <div class="li" style="background:rgba(34,211,238,.16)">⚙️</div>
+      <div><h4>服务层 · Node.js + Express</h4><p>单一 3000 端口同时提供前端页面与 REST API；JWT 鉴权 + 双角色权限中间件</p></div>
+      <div class="tags"><span>Express</span><span>JWT</span><span>Multer</span><span>CORS</span></div>
+    </div>
+    <div class="arch-layer reveal d3">
+      <div class="li" style="background:rgba(139,92,246,.18)">🗄️</div>
+      <div><h4>数据层 · MySQL</h4><p>用户 / 商品 / 订单 / 通知 / 审核日志六张核心表，utf8mb4 完整支持中文与表情</p></div>
+      <div class="tags"><span>mysql2</span><span>连接池</span><span>schema.sql</span></div>
+    </div>
+    <div class="arch-layer reveal d4">
+      <div class="li" style="background:rgba(16,185,129,.16)">💾</div>
+      <div><h4>持久化 · 图片落盘 + 本地缓存</h4><p>图片上传后永久保存于 server/uploads/；业务数据定时写入 localStorage，刷新不丢</p></div>
+      <div class="tags"><span>/api/upload</span><span>diskStorage</span><span>localStorage</span><span>容量降级</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 演示动线 ============ -->
+<section class="wrap" id="demo">
+  <div class="kicker reveal">07 · 十分钟答辩动线</div>
+  <div class="sec-title reveal">视频 + 原型 + 交互 + 答辩，<span class="grad">10 分钟节奏分配</span></div>
+
+  <div class="timeline">
+    <div class="tl reveal d1">
+      <div class="pt">🎬</div><div class="dur">0:00 – 1:30</div><h4>宣传视频 · 1~1.5 分钟</h4>
+      <p>开场放 App 宣传视频，快速建立产品第一印象，结尾画面停留在 Logo 与 slogan。</p>
+    </div>
+    <div class="tl reveal d2">
+      <div class="pt">📐</div><div class="dur">1:30 – 4:30</div><h4>原型 / 设计思路 · 2~3 分钟</h4>
+      <p>沿本页讲痛点 → 双角色 → 六步闭环 → 界面实拍；指出蓝/紫主题如何区分身份，体现设计思考。</p>
+    </div>
+    <div class="tl reveal d3">
+      <div class="pt">📲</div><div class="dur">4:30 – 7:00</div><h4>交互演示 · 2~3 分钟</h4>
+      <p>现场真机操作一条完整任务流：注册新号 → 发布闲置（实拍上传）→ 审核通过 → 下单 → 聊天 → 收货评价。</p>
+    </div>
+    <div class="tl reveal d4">
+      <div class="pt">🙋</div><div class="dur">7:00 – 10:00</div><h4>评委提问答辩 · 3~4 分钟</h4>
+      <p>从容应答，答案预设见《演讲稿与答辩手册.md》；先肯定问题，再给结论，最后举实例。</p>
+    </div>
+  </div>
+
+  <div class="note-grid reveal">
+    <div class="note"><div class="ni">⏱️</div><b>严格掐表排练</b><p>全程排练至少 2~3 遍并掐表，超时会被现场打断，宁可留出 20 秒余量。</p></div>
+    <div class="note"><div class="ni">💻</div><b>提前到场测试</b><p>提前测试投影、翻页器与网络；服务离线可运行，但务必先预演一遍。</p></div>
+    <div class="note"><div class="ni">👥</div><b>明确分工</b><p>分好谁讲视频旁白、谁讲原型、谁现场操作、谁主答评委问题。</p></div>
+    <div class="note"><div class="ni">🔋</div><b>离线备份</b><p>手机/电脑充满电；全部文件本地离线备份，不依赖现场网络。</p></div>
+  </div>
+</section>
+
+<!-- ============ 页脚 ============ -->
+<div class="footer wrap">
+  <h3>上商淘</h3>
+  <p>上海商学院校园二手交易平台 · 让闲置在校园里继续发光</p>
+  <a class="btn btn-primary" href="index.html">▶&nbsp; 立即体验可交互原型</a>
+</div>
+
+<!-- ============ 灯箱 ============ -->
+<div class="lightbox" id="lightbox" role="dialog" aria-modal="true">
+  <button class="lb-close" id="lbClose" aria-label="关闭">✕</button>
+  <button class="lb-nav lb-prev" id="lbPrev" aria-label="上一张">‹</button>
+  <img id="lbImg" src="" alt="原型放大图">
+  <button class="lb-nav lb-next" id="lbNext" aria-label="下一张">›</button>
+  <div class="cap-t" id="lbCap"></div>
+</div>
+
+<script>
+(function(){
+  /* 进度条 */
+  var progress = document.getElementById('progress');
+  /* 滚动显现 */
+  var io = new IntersectionObserver(function(es){
+    es.forEach(function(e){ if(e.isIntersecting){ e.target.classList.add('in'); io.unobserve(e.target); } });
+  },{threshold:.12});
+  document.querySelectorAll('.reveal').forEach(function(el){ io.observe(el); });
+
+  /* 导航高亮 + 进度条 */
+  var navLinks = document.querySelectorAll('[data-nav]');
+  var sections = Array.prototype.map.call(navLinks,function(a){return document.getElementById(a.dataset.nav);});
+  function onScroll(){
+    var h = document.documentElement;
+    var max = h.scrollHeight - h.clientHeight;
+    progress.style.width = (max>0 ? (h.scrollTop/max*100) : 0) + '%';
+    var idx = 0;
+    sections.forEach(function(s,i){ if(s && s.getBoundingClientRect().top <= 140) idx = i; });
+    navLinks.forEach(function(a,i){ a.classList.toggle('active', i===idx); });
+  }
+  window.addEventListener('scroll', onScroll, {passive:true});
+  onScroll();
+
+  /* 灯箱 */
+  var shots = Array.prototype.slice.call(document.querySelectorAll('.shot'));
+  var lb = document.getElementById('lightbox');
+  var lbImg = document.getElementById('lbImg');
+  var lbCap = document.getElementById('lbCap');
+  var cur = 0;
+  function show(i){
+    cur = (i + shots.length) % shots.length;
+    var s = shots[cur];
+    lbImg.src = s.dataset.full;
+    lbImg.alt = s.dataset.cap || '';
+    lbCap.textContent = (cur+1) + ' / ' + shots.length + ' · ' + (s.dataset.cap||'');
+  }
+  function openLb(i){ show(i); lb.classList.add('show'); document.body.style.overflow='hidden'; }
+  function closeLb(){ lb.classList.remove('show'); document.body.style.overflow=''; }
+  shots.forEach(function(s,i){ s.addEventListener('click',function(){openLb(i);}); });
+  document.getElementById('lbClose').onclick = closeLb;
+  document.getElementById('lbPrev').onclick = function(e){e.stopPropagation();show(cur-1);};
+  document.getElementById('lbNext').onclick = function(e){e.stopPropagation();show(cur+1);};
+  lb.addEventListener('click',function(e){ if(e.target === lb) closeLb(); });
+  document.addEventListener('keydown',function(e){
+    if(!lb.classList.contains('show')) return;
+    if(e.key==='Escape') closeLb();
+    if(e.key==='ArrowLeft') show(cur-1);
+    if(e.key==='ArrowRight') show(cur+1);
+  });
+})();
+</script>
+</body>
+</html>
